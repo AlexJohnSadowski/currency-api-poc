@@ -1,0 +1,14 @@
+{
+  "name": "@go-workspace-test/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "dependencies": {
+    "@naxodev/gonx": "2.0.2"
+  },
+  "devDependencies": {
+    "@nx/workspace": "21.3.10",
+    "nx": "21.3.10"
+  }
+}
