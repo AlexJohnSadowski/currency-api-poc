@@ -1,14 +1,35 @@
 {
-  "name": "@go-workspace-test/source",
+  "name": "my-go-monorepo",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
   "private": true,
+  "scripts": {
+ "dev": "ENV_FILE=./.env.development docker compose up --build",
+    "prod": "ENV_FILE=./.env.production docker compose up --build", 
+    "start": "docker compose up --build",
+    "stop": "docker compose down",
+    "clean": "docker compose down -v --rmi local",
+    "logs": "docker compose logs -f currency-api",
+    "health": "curl -f http://api.localhost/health || curl -f http://localhost:8080/health"
+  },
   "dependencies": {
-    "@naxodev/gonx": "2.0.2"
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@nx/workspace": "21.3.10",
-    "nx": "21.3.10"
+    "@naxodev/gonx": "2.0.2",
+    "@nx/eslint": "19.4.1",
+    "@nx/jest": "19.4.1",
+    "@nx/js": "19.4.1",
+    "@nx/react": "19.4.1",
+    "@nx/web": "19.4.1",
+    "@nx/workspace": "19.4.1",
+    "nx": "19.4.1",
+    "typescript": "~5.5.2",
+    "@types/node": "18.16.9",
+    "@types/react": "18.3.1",
+    "@types/react-dom": "18.3.0"
   }
 }
+

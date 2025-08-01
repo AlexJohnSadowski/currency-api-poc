@@ -1,0 +1,38 @@
+{
+  "name": "currency-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "currency-api",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@naxodev/gonx:build",
+      "options": {
+        "main": "currency-api/main.go"
+      }
+    },
+    "serve": {
+      "executor": "@naxodev/gonx:serve",
+      "options": {
+        "main": "currency-api/main.go"
+      }
+    },
+    "test": {
+      "executor": "@naxodev/gonx:test",
+      "options": {
+        "cover": true,
+        "race": true
+      }
+    },
+    "lint": {
+      "executor": "@naxodev/gonx:lint"
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t currency-api:latest .",
+        "cwd": "currency-api"
+      }
+    }
+  },
+  "tags": []
+}

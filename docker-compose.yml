@@ -1,0 +1,98 @@
+
+services:
+  currency-api:
+    container_name: currency-api-service
+    build:
+      context: ./apps/currency-api
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    env_file:
+      - ${ENV_FILE:-.env}
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=currency-exchange-network"
+      
+      - "traefik.http.routers.currency-api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.currency-api.entrypoints=web"
+      - "traefik.http.routers.currency-api.service=currency-api-service"
+      
+      # Middlewares
+      - "traefik.http.routers.currency-api.middlewares=api-rate-limit@docker,cors-headers@docker"
+      
+      # Forward services
+      - "traefik.http.services.currency-api-service.loadbalancer.server.port=8080"
+      - "traefik.http.services.currency-api-service.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.currency-api-service.loadbalancer.healthcheck.interval=30s"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-gateway
+    command:
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.level=INFO"
+      - "--api.insecure=true"
+    ports:
+      - "80:80"
+      - "8090:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_logs:/var/log/traefik
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      # Middleware Definitions
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=GET,HEAD,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlMaxAge=86400"
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.average=100"
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.burst=200"
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.period=1s"
+      - "traefik.http.middlewares.heavy-rate-limit.rateLimit.average=10"
+      - "traefik.http.middlewares.heavy-rate-limit.rateLimit.burst=20"
+      - "traefik.http.middlewares.heavy-rate-limit.rateLimit.period=1s"
+      # Dashboard configuration
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  traefik_logs:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    name: currency-exchange-network
