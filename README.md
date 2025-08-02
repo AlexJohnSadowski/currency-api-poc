@@ -47,7 +47,6 @@ apps/currency-api/
 │       └── routes/         # Route definitions
 │           └── api_routes.go
 ├── docs/                   # Auto-generated Swagger documentation
-├── test/                   # Test suites (to be added)
 └── Dockerfile             # Container definition
 ```
 
