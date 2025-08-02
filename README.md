@@ -93,7 +93,7 @@ labels:
 
 ### 1. Clone and Setup
 ```bash
-git clone <repository-url>
+git clone https://github.com/AlexJohnSadowski/currency-api-poc
 cd currency-exchange-api
 npm install
 ```
