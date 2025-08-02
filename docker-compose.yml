@@ -1,0 +1,120 @@
+services:
+  currency-api:
+    # We will stick with the aligned container_name for robustness
+    container_name: currency-api 
+    build:
+      context: .
+      dockerfile: ./apps/currency-api/Dockerfile
+    ports: 
+      - "8080:8080"
+    env_file:
+      - ${ENV_FILE:-.env}
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      
+      # Main API routes
+      - "traefik.http.routers.currency-api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.currency-api.entrypoints=web"
+      - "traefik.http.routers.currency-api.service=currency-api"
+      - "traefik.http.routers.currency-api.middlewares=api-rate-limit@docker,cors-headers@docker"
+      
+      # Service definition
+      - "traefik.http.services.currency-api.loadbalancer.server.port=8080"
+      - "traefik.http.services.currency-api.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.currency-api.loadbalancer.healthcheck.interval=30s"
+      
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+    # Development hot-reload configuration
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /app
+          ignore:
+            - "tmp"
+            - ".git"
+    working_dir: /app/apps/currency-api
+    command: >
+      sh -c "
+        go build -o ./tmp/main ./cmd/server && 
+        echo '🚀 Starting application...' && 
+        ./tmp/main
+      "
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik-gateway
+    command:
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--log.level=DEBUG" 
+      - "--api.insecure=true"
+    ports:
+      - "80:80"
+      - "8090:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_logs:/var/log/traefik
+    networks:
+      - app-network
+    # FIX: Ensure traefik starts only after currency-api is running
+    depends_on:
+      - currency-api
+    labels:
+      - "traefik.enable=true"
+      
+      # CORS middleware
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=GET,HEAD,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=*"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlMaxAge=86400"
+      
+      # Rate limiting
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.average=100"
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.burst=200"
+      - "traefik.http.middlewares.api-rate-limit.rateLimit.period=1s"
+      
+      # Dashboard
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  traefik_logs:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    name: currency-exchange-network
+

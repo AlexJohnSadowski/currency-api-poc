@@ -1,0 +1,209 @@
+basePath: /
+definitions:
+  entities.ExchangeRate:
+    properties:
+      from:
+        type: string
+      rate:
+        type: number
+      to:
+        type: string
+    type: object
+  entities.ExchangeResult:
+    properties:
+      amount:
+        type: number
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  handlers.EndpointsInfo:
+    properties:
+      exchange:
+        example: /exchange?from=WBTC&to=USDT&amount=1.0
+        type: string
+      health:
+        example: /health
+        type: string
+      rates:
+        example: /rates?currencies=USD,EUR,GBP
+        type: string
+    type: object
+  handlers.EnvironmentInfo:
+    properties:
+      gin_mode:
+        example: debug
+        type: string
+      mode:
+        example: development
+        type: string
+      port:
+        example: "8080"
+        type: string
+    type: object
+  handlers.HTTPError:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: Invalid input provided
+        type: string
+    type: object
+  handlers.HealthResponse:
+    properties:
+      endpoints:
+        $ref: '#/definitions/handlers.EndpointsInfo'
+      environment:
+        $ref: '#/definitions/handlers.EnvironmentInfo'
+      features:
+        items:
+          type: string
+        type: array
+      framework:
+        example: gin-gonic
+        type: string
+      go_version:
+        example: "1.24"
+        type: string
+      nx_plugin:
+        example: '@naxodev/gonx'
+        type: string
+      service:
+        example: currency-exchange-api
+        type: string
+      status:
+        example: healthy
+        type: string
+      timestamp:
+        type: integer
+      version:
+        example: 2.0.0
+        type: string
+    type: object
+  handlers.RatesErrorResponse:
+    properties:
+      error:
+        example: currencies parameter is required
+        type: string
+      example:
+        example: GET /rates?currencies=USD,EUR,GBP
+        type: string
+    type: object
+  handlers.RatesResponse:
+    properties:
+      rates:
+        items:
+          $ref: '#/definitions/entities.ExchangeRate'
+        type: array
+      source_info:
+        example: "\U0001F511 API key provided: Using live rates"
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@currencyapi.com
+    name: API Support
+  description: A modern currency exchange API built with Go and Gin
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Currency Exchange API
+  version: 2.0.0
+paths:
+  /api/v1/exchange:
+    get:
+      consumes:
+      - application/json
+      description: Convert one cryptocurrency to another using predefined exchange
+        rates
+      parameters:
+      - description: Source cryptocurrency code
+        enum:
+        - BEER
+        - FLOKI
+        - GATE
+        - USDT
+        - WBTC
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Target cryptocurrency code
+        enum:
+        - BEER
+        - FLOKI
+        - GATE
+        - USDT
+        - WBTC
+        in: query
+        name: to
+        required: true
+        type: string
+      - description: Amount to exchange
+        in: query
+        minimum: 1e-06
+        name: amount
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entities.ExchangeResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.HTTPError'
+      summary: Exchange cryptocurrencies
+      tags:
+      - Exchange
+  /api/v1/rates:
+    get:
+      consumes:
+      - application/json
+      description: Get exchange rates for a list of currencies (minimum 2 required)
+      parameters:
+      - description: Comma-separated list of currency codes (e.g., USD,EUR,GBP)
+        in: query
+        name: currencies
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RatesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.RatesErrorResponse'
+      summary: Get exchange rates
+      tags:
+      - Rates
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Get the current health status of the API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.HealthResponse'
+      summary: Health check
+      tags:
+      - System
+schemes:
+- http
+- https
+swagger: "2.0"
