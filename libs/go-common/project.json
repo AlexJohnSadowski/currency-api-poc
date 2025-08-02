@@ -1,0 +1,23 @@
+{
+  "name": "go-common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/go-common",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@naxodev/gonx:test",
+      "options": {
+        "cover": true,
+        "race": true,
+        "verbose": true,
+        "testFiles": [
+          "./..."
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@naxodev/gonx:lint"
+    }
+  },
+  "tags": ["go", "common-library"]
+}

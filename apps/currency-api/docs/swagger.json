@@ -1,0 +1,302 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "A modern currency exchange API built with Go and Gin",
+        "title": "Currency Exchange API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "email": "support@currencyapi.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "2.0.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/exchange": {
+            "get": {
+                "description": "Convert one cryptocurrency to another using predefined exchange rates",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exchange"
+                ],
+                "summary": "Exchange cryptocurrencies",
+                "parameters": [
+                    {
+                        "enum": [
+                            "BEER",
+                            "FLOKI",
+                            "GATE",
+                            "USDT",
+                            "WBTC"
+                        ],
+                        "type": "string",
+                        "description": "Source cryptocurrency code",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "BEER",
+                            "FLOKI",
+                            "GATE",
+                            "USDT",
+                            "WBTC"
+                        ],
+                        "type": "string",
+                        "description": "Target cryptocurrency code",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "minimum": 0.000001,
+                        "type": "number",
+                        "description": "Amount to exchange",
+                        "name": "amount",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entities.ExchangeResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/rates": {
+            "get": {
+                "description": "Get exchange rates for a list of currencies (minimum 2 required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rates"
+                ],
+                "summary": "Get exchange rates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of currency codes (e.g., USD,EUR,GBP)",
+                        "name": "currencies",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RatesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.RatesErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Get the current health status of the API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.HealthResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "entities.ExchangeRate": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "rate": {
+                    "type": "number"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.ExchangeResult": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.EndpointsInfo": {
+            "type": "object",
+            "properties": {
+                "exchange": {
+                    "type": "string",
+                    "example": "/exchange?from=WBTC\u0026to=USDT\u0026amount=1.0"
+                },
+                "health": {
+                    "type": "string",
+                    "example": "/health"
+                },
+                "rates": {
+                    "type": "string",
+                    "example": "/rates?currencies=USD,EUR,GBP"
+                }
+            }
+        },
+        "handlers.EnvironmentInfo": {
+            "type": "object",
+            "properties": {
+                "gin_mode": {
+                    "type": "string",
+                    "example": "debug"
+                },
+                "mode": {
+                    "type": "string",
+                    "example": "development"
+                },
+                "port": {
+                    "type": "string",
+                    "example": "8080"
+                }
+            }
+        },
+        "handlers.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Invalid input provided"
+                }
+            }
+        },
+        "handlers.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "endpoints": {
+                    "$ref": "#/definitions/handlers.EndpointsInfo"
+                },
+                "environment": {
+                    "$ref": "#/definitions/handlers.EnvironmentInfo"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "framework": {
+                    "type": "string",
+                    "example": "gin-gonic"
+                },
+                "go_version": {
+                    "type": "string",
+                    "example": "1.24"
+                },
+                "nx_plugin": {
+                    "type": "string",
+                    "example": "@naxodev/gonx"
+                },
+                "service": {
+                    "type": "string",
+                    "example": "currency-exchange-api"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "2.0.0"
+                }
+            }
+        },
+        "handlers.RatesErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "currencies parameter is required"
+                },
+                "example": {
+                    "type": "string",
+                    "example": "GET /rates?currencies=USD,EUR,GBP"
+                }
+            }
+        },
+        "handlers.RatesResponse": {
+            "type": "object",
+            "properties": {
+                "rates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.ExchangeRate"
+                    }
+                },
+                "source_info": {
+                    "type": "string",
+                    "example": "🔑 API key provided: Using live rates"
+                }
+            }
+        }
+    }
+}

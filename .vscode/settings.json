@@ -1,21 +1,28 @@
 {
   // --- Go Language & Formatting ---
+
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
   },
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
+
   // --- Code Quality & Analysis ---
+
   "go.vetOnSave": "workspace",
   "go.lintOnSave": "workspace",
+
   // --- Go Tooling & Language Server ---
+
   "go.useLanguageServer": true,
   "go.toolsManagement.autoUpdate": true,
   "gopls": {
     "ui.semanticTokens": true
   },
+
   // --- General Workspace Settings ---
+  
   "files.eol": "\n",
   "files.exclude": {
     "**/.git": true,

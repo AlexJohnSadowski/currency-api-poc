@@ -1,38 +1,141 @@
 {
   "name": "currency-api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "currency-api",
+  "sourceRoot": "apps/currency-api",
   "projectType": "application",
   "targets": {
     "build": {
       "executor": "@naxodev/gonx:build",
       "options": {
-        "main": "currency-api/main.go"
+        "main": "apps/currency-api/cmd/server/main.go"
       }
     },
     "serve": {
       "executor": "@naxodev/gonx:serve",
       "options": {
-        "main": "currency-api/main.go"
+        "main": "apps/currency-api/cmd/server/main.go",
+        "env": {
+          "GIN_MODE": "debug",
+          "LOG_LEVEL": "debug",
+          "ENABLE_HOT_RELOAD": "true"
+        }
+      }
+    },
+    "serve:prod": {
+      "executor": "@naxodev/gonx:serve",
+      "options": {
+        "main": "apps/currency-api/cmd/server/main.go",
+        "env": {
+          "GIN_MODE": "release",
+          "LOG_LEVEL": "info",
+          "ENABLE_HOT_RELOAD": "false"
+        }
       }
     },
     "test": {
       "executor": "@naxodev/gonx:test",
       "options": {
         "cover": true,
-        "race": true
+        "race": true,
+        "verbose": true,
+        "testFiles": [
+          "./test/unit/...",
+          "./internal/..."
+        ]
+      }
+    },
+    "test:integration": {
+      "executor": "@naxodev/gonx:test",
+      "options": {
+        "cover": true,
+        "testFiles": [
+          "./test/integration/..."
+        ],
+        "env": {
+          "GIN_MODE": "test",
+          "LOG_LEVEL": "error"
+        }
+      }
+    },
+    "test:unit": {
+      "executor": "@naxodev/gonx:test",
+      "options": {
+        "cover": true,
+        "race": true,
+        "testFiles": [
+          "./test/unit/...",
+          "./internal/app/...",
+          "./internal/domain/..."
+        ]
+      }
+    },
+    "bench": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go test -bench=. -benchmem ./test/...",
+        "cwd": "apps/currency-api"
       }
     },
     "lint": {
       "executor": "@naxodev/gonx:lint"
     },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "gofmt -w . && go mod tidy",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "generate:mocks": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go generate ./...",
+        "cwd": "apps/currency-api"
+      }
+    },
     "docker-build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker build -t currency-api:latest .",
-        "cwd": "currency-api"
+        "command": "docker build -t currency-api:latest -f Dockerfile .",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "docker-build:prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t currency-api:prod -f Dockerfile --target production .",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "docker-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker run -p 8080:8080 --env-file .env currency-api:latest",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "go run ./cmd/migrate",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "docs:swagger": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "swag init -g ./cmd/server/main.go --output ./docs",
+        "cwd": "apps/currency-api"
+      }
+    },
+    "security:scan": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "gosec ./...",
+        "cwd": "apps/currency-api"
       }
     }
   },
-  "tags": []
+  "tags": ["api", "currency", "cqrs", "gin", "go"],
+  "implicitDependencies": ["go-common"]
 }

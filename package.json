@@ -1,11 +1,11 @@
 {
-  "name": "my-go-monorepo",
+  "name": "crypto-exchange-monorepo",
   "version": "0.0.0",
   "license": "MIT",
   "private": true,
   "scripts": {
- "dev": "ENV_FILE=./.env.development docker compose up --build",
-    "prod": "ENV_FILE=./.env.production docker compose up --build", 
+    "dev": "ENV_FILE=./.env.development docker compose watch",
+    "prod": "ENV_FILE=./.env.production docker compose up --build",
     "start": "docker compose up --build",
     "stop": "docker compose down",
     "clean": "docker compose down -v --rmi local",
